@@ -107,6 +107,8 @@
 					
 					Ulala._loadImage($this);
 				}
+			} else {
+				$this.attr(Ulala.domPrefix + 'loaded', true);
 			}
 
 			if ($this.attr('data-waypoint') != null) {
