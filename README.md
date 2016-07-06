@@ -25,3 +25,7 @@ Ratio of the window to trigger the visibility.
 #### `visibleClass`
 
 The class to add when visible.
+
+#### `useSuffix`
+
+Tell the lib to use / not use suffix for images (like `@2x`)
