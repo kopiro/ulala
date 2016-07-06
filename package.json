@@ -1,0 +1,22 @@
+{
+  "name": "ulala",
+  "version": "1.0.0",
+  "description": "Show the right things when you scroll",
+  "main": "ulala.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/caffeinalab/ulala.git"
+  },
+  "author": "Flavio De Stefano",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/caffeinalab/ulala/issues"
+  },
+  "homepage": "https://github.com/caffeinalab/ulala#readme"
+}
