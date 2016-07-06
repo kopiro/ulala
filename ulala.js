@@ -22,7 +22,7 @@
 		config: {
 			preloadIn: 1,
 			visibilityIn: 0,
-			useSuffixs: true,
+			useSuffixes: true,
 			visibleClass: '-visible'
 		}
 	};
@@ -46,7 +46,7 @@
 	Ulala._loadImage = function($this) {
 		var file = $this.data('image');
 
-		if (Ulala.config.useSuffixs && ($this.data('nosuffix') == null)){
+		if (Ulala.config.useSuffixes && ($this.data('nosuffix') == null)){
 			file = file.replace(/(\..+$)/, function(match, $1, $2, offset, original) {
 				return Ulala.suffix + $1;
 			});
