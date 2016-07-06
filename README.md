@@ -7,5 +7,21 @@
 Include the script in your page.
 
 ```
-Ulala.init()
+Ulala.init({
+    /* config */
+})
 ```
+
+### Config
+
+#### `preloadIn`
+
+Ratio of the window to trigger the loading
+
+#### `visibilityIn`
+
+Ratio of the window to trigger the visibility.
+
+#### `visibleClass`
+
+The class to add when visible.
