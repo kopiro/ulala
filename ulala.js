@@ -113,15 +113,10 @@
 		var height = $wrapper.outerHeight() << 0;
 		var parallaxOffset = $this.attr(Ulala.domPrefix + 'pdelta');
 
-		var pv = (cs + wh / 2);
-		var a = posTop << 0;
-		var b = (posTop + height) << 0;
-
-		var translation = (pv - a) / (b - a);
+		var pv = cs + wh;
+		var translation = (pv - posTop) / (wh + height); 
 		var cssTranslation = -1 * Math.min(Math.max(translation,0),1) * parallaxOffset;
 	
-		console.log(posTop, height, pv, translation);
-
 		$this.css(
 		Ulala.cssPrefix + 'transform', 
 		'translate3d(0, ' + cssTranslation + 'px, 0)'
@@ -175,7 +170,7 @@
 		var r = 1 + Number($this.attr('data-parallax'));
 		var wrapperHeightWithPR = (r * $wrapper.outerHeight());
 
-		$this.load(function() {
+		var onLoaded = function() {
 			var RI = $this.prop('naturalWidth') / $this.prop('naturalHeight');
 			var RW =  ($wrapper.outerWidth() / wrapperHeightWithPR);
 
@@ -202,8 +197,13 @@
 					margin: '0 auto'
 				});
 			}
+		};
 
-		});
+		if ($this.prop('complete')) {
+			onLoaded();
+		} else {
+			$this.load(onLoaded);
+		}
 	};
 
 	Ulala.preParse = function() {
@@ -234,7 +234,7 @@
 
 		var style = '';
 		style += '[data-parallax-wrapper] { overflow: hidden; position: relative; }';
-		style += '[data-parallax] { position: absolute; }';
+		style += '[data-parallax] { position: absolute; ' + Ulala.cssPrefix + 'transition: transform 0s;}';
 		$('head').append('<style>' + style + '</style>');
 
 		Ulala.$elements = $('[data-waypoint],[data-image],[data-parallax]');
@@ -253,6 +253,7 @@
 			Ulala.$document.on('scroll', Ulala.run);
 		}
 
+		Ulala.$window.load(Ulala.run);
 		Ulala.run();
 	};
 
