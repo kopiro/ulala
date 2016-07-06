@@ -108,62 +108,24 @@
 	};
 
 	Ulala.elementParallax = function($this, cs, wh) {
-		var $wrap = $this.parent();
+		var $wrapper = $this.parent();
+		var posTop = $this.attr(Ulala.domPrefix + 'otop') << 0;
+		var height = $wrapper.outerHeight() << 0;
+		var parallaxOffset = $this.attr(Ulala.domPrefix + 'pdelta');
 
-		var onObjectLoaded = function() {
-			var wrapOuterHeight = $wrap.outerHeight();
-			var offsetTop = $this.attr(Ulala.domPrefix + 'offset-top');
+		var pv = (cs + wh / 2);
+		var a = posTop << 0;
+		var b = (posTop + height) << 0;
 
-			var imgNatHeight =  $this.prop('naturalHeight') / $this.prop('naturalWidth') * $wrap.outerWidth();
-			var parallaxOffset = imgNatHeight - wrapOuterHeight;
+		var translation = (pv - a) / (b - a);
+		var cssTranslation = -1 * Math.min(Math.max(translation,0),1) * parallaxOffset;
+	
+		console.log(posTop, height, pv, translation);
 
-			if (parallaxOffset > 0) {
-
-				// Std case
-
-				var translation = ((cs + wh) - offsetTop) / (wh + wrapOuterHeight);
-				var cssTranslation = -1 * Math.min(Math.max(translation,0),1) * parallaxOffset;
-
-				$this.css(
-				Ulala.cssPrefix + 'transform', 
-				'translate3d(0, ' + cssTranslation + 'px, 0)'
-				)
-				.css({
-					position: 'absolute', 
-					width: '100%', 
-					height: 'auto', 
-					top: 0, 
-					left: 0,	
-					right: 0, 
-					opacity: 1
-				});
-
-			} else {
-
-				// Limit case
-
-				$this
-				.css(Ulala.cssPrefix + 'transform', 'none')
-				.css({
-					height: wrapOuterHeight,
-					position: 'absolute', 
-					width: 'auto', 
-					top: 0, 
-					bottom: 0,
-					left: '-9999px', 
-					right: '-9999px', 
-					margin: '0 auto', 
-					opacity: 1
-				});
-
-			}
-		};
-
-		if ($this.prop('complete')) {
-			onObjectLoaded();
-		} else {
-			$this.load(onObjectLoaded);
-		}
+		$this.css(
+		Ulala.cssPrefix + 'transform', 
+		'translate3d(0, ' + cssTranslation + 'px, 0)'
+		);
 	};
 
 	Ulala.parse = function(e) {
@@ -177,7 +139,7 @@
 
 		Ulala.$elements.each(function() {
 			var $this = $(this);
-			var offset = $this.attr(Ulala.domPrefix + 'offset-top');
+			var offset = $this.attr(Ulala.domPrefix + 'otop');
 
 			// Loading images
 
@@ -208,12 +170,63 @@
 		});
 	};
 
+	Ulala.elementParseParallax = function($this) {
+		var $wrapper = $this.parent();
+		var r = 1 + Number($this.attr('data-parallax'));
+		var wrapperHeightWithPR = (r * $wrapper.outerHeight());
+
+		$this.load(function() {
+			var RI = $this.prop('naturalWidth') / $this.prop('naturalHeight');
+			var RW =  ($wrapper.outerWidth() / wrapperHeightWithPR);
+
+			if (RI > RW) {
+				$this.height( wrapperHeightWithPR );
+				$this.width( wrapperHeightWithPR * RI );
+				$this.css({
+					left: '-999px',
+					right: '-999px',
+					top: 0,
+					margin: '0 auto'
+				});
+			} else {
+				$this.width( $wrapper.outerWidth() );
+				$this.height( $wrapper.outerWidth() / RI );
+
+				var delta = ($wrapper.outerWidth() / RI) - $wrapper.outerHeight();
+				$this.attr(Ulala.domPrefix + 'pdelta', delta);
+
+				$this.css({
+					left: '-999px',
+					right: '-999px',
+					top: 0,
+					margin: '0 auto'
+				});
+			}
+
+		});
+	};
+
 	Ulala.preParse = function() {
+		Ulala.calcImageSuffix();
+
 		Ulala.$elements.each(function() {
 			var $this = $(this);
-			$this.attr(Ulala.domPrefix + 'offset-top', $this.offset().top);
-			$this.attr(Ulala.domPrefix + 'outer-height', $this.outerHeight());
+			$this.attr(Ulala.domPrefix + 'otop', $this.offset().top);
+
+			if ($this.attr('data-parallax') != null) {
+				$this.attr(Ulala.domPrefix + 'otop', $this.parent().offset().top);
+				if ($this.attr(Ulala.domPrefix + 'data-parallax-parsed') == null) {
+					$this.attr(Ulala.domPrefix + 'data-parallax-parsed', true);
+					Ulala.elementParseParallax($this);
+				}
+			}
 		});
+	};
+
+
+	Ulala.run = function() {
+		Ulala.preParse();
+		requestAnimationFrame(Ulala.parse);
 	};
 
 	Ulala.init = function(config) {
@@ -221,6 +234,7 @@
 
 		var style = '';
 		style += '[data-parallax-wrapper] { overflow: hidden; position: relative; }';
+		style += '[data-parallax] { position: absolute; }';
 		$('head').append('<style>' + style + '</style>');
 
 		Ulala.$elements = $('[data-waypoint],[data-image],[data-parallax]');
@@ -230,23 +244,16 @@
 
 			Ulala.$window.on('resize', function() {
 				clearTimeout(Ulala._resizeTimeout);
-				Ulala._resizeTimeout = setTimeout(function() {
-					Ulala.calcImageSuffix();
-					Ulala.preParse();
-				}, 250);
+				Ulala._resizeTimeout = setTimeout(Ulala.run, 250);
 			});
 		}
 
 		if (Ulala._onScrollHandlerAttached == null) {
 			Ulala._onScrollHandlerAttached = true;
-
-			Ulala.$document.on('scroll', function(e) {
-				requestAnimationFrame(Ulala.parse);
-			});
+			Ulala.$document.on('scroll', Ulala.run);
 		}
 
-		Ulala.preParse();
-		Ulala.parse();
+		Ulala.run();
 	};
 
 	return Ulala;
