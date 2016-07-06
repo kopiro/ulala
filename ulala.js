@@ -50,14 +50,20 @@
 	};
 
 	Ulala._loadImage = function($this) {
-		$this.load(function() {
+		var onLoaded = function() {
 			$this.attr(Ulala.domPrefix + 'loaded', true);
 			$this.addClass(Ulala.config.loadedClass);
 
 			if ($this.attr(Ulala.domPrefix + 'visible')) {
 				Ulala._showImage($this);
 			}
-		});
+		};
+
+		if ($this.prop('complete')) {
+			onLoaded();
+		} else {
+			$this.load(onLoaded);
+		}
 
 		if ($this.data('image') != null) {
 			var file = $this.data('image');
