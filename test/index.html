@@ -6,12 +6,16 @@
 </head>
 <body>
 
-	<img height="400" style="display: block; border: 1px solid #000" data-waypoint data-image="http://unsplash.it/600/400/?image=10" />
-	<img height="400" style="display: block; border: 1px solid #000" data-waypoint data-image="http://unsplash.it/600/400/?image=20" />
-	<img height="400" style="display: block; border: 1px solid #000" data-waypoint data-image="http://unsplash.it/600/400/?image=30" />
-	<img height="400" style="display: block; border: 1px solid #000" data-waypoint data-image="http://unsplash.it/600/400/?image=40" />
+	<style>
+		img { opacity: 0; margin-bottom: 300px; -webkit-transition: opacity 1s; }
+		img.-visible { opacity: 1; }
+	</style>
 
-	<script>Ulala.init();</script>
+	<img height="400" style="display: block; border: 1px solid #000" data-waypoint src="http://unsplash.it/600/400/?image=10" />
+	<img height="400" style="display: block; border: 1px solid #000" data-waypoint src="http://unsplash.it/600/400/?image=20" />
+	<img height="400" style="display: block; border: 1px solid #000" data-waypoint src="http://unsplash.it/600/400/?image=30" />
+
+	<script>Ulala.init({ debug: 2 });</script>
 
 </body>
 </html>

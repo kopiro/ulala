@@ -20,9 +20,11 @@
 		suffix: '',
 
 		config: {
+			debug: 0,
 			preloadIn: 1,
 			visibilityIn: 0,
 			useSuffixes: true,
+			loadedClass: '-loaded',
 			visibleClass: '-visible'
 		}
 	};
@@ -43,40 +45,43 @@
 		}
 	};
 
+	Ulala._shouldBeWaitLoading = function($this) {
+		return $this.data('image') != null || $this.prop('tagName') === 'IMG';
+	};
+
 	Ulala._loadImage = function($this) {
-		var file = $this.data('image');
-
-		if (Ulala.config.useSuffixes && ($this.data('nosuffix') == null)){
-			file = file.replace(/(\..+$)/, function(match, $1, $2, offset, original) {
-				return Ulala.suffix + $1;
-			});
-		}
-
-		var img = new Image();
-		img.src = file;
-
-		img.addEventListener('load', function() {
-			if ($this.prop('tagName') === 'DIV') {
-				$this.attr('style', 'background-image: url("' + file + '")');
-			} else if ($this.prop('tagName') === 'IMG') {
-				$this.attr('src', file);
-			} else {
-				console.error('Ulala: unrecognized tag', $this.prop('tagName'));
-			}
-
+		$this.load(function() {
 			$this.attr(Ulala.domPrefix + 'loaded', true);
-			if ($this.attr(Ulala.domPrefix + 'shown')) {
+			$this.addClass(Ulala.config.loadedClass);
+
+			if ($this.attr(Ulala.domPrefix + 'visible')) {
 				Ulala._showImage($this);
 			}
-		}, false);
+		});
 
-		img.addEventListener('error', function() {
-			console.error('Ulala: error loading', file);
-		}, false);
+		if ($this.data('image') != null) {
+			var file = $this.data('image');
+
+			if (Ulala.config.useSuffixes && ($this.data('nosuffix') == null)) {
+				file = file.replace(/(\..+$)/, function(match, $1, $2, offset, original) {
+					return Ulala.suffix + $1;
+				});
+			}
+
+			new Image(file).addEventListener('load', function() {
+				if ($this.prop('tagName') === 'DIV') {
+					$this.attr('style', 'background-image: url("' + file + '")');
+				} else if ($this.prop('tagName') === 'IMG') {
+					$this.attr('src', file);
+				} else {
+					console.error('Ulala: unrecognized tag for lazy loading', $this.prop('tagName'));
+				}
+			}, false);
+		}
 	};
 
 	Ulala._showImage = function($this) {
-		$this.attr(Ulala.domPrefix + 'shown', true);
+		$this.attr(Ulala.domPrefix + 'visible', true);
 
 		if ($this.attr(Ulala.domPrefix + 'loaded')) {
 			$this.addClass(Ulala.config.visibleClass);
@@ -96,9 +101,10 @@
 			var $this = $(this);
 			var offset = $this.attr(Ulala.domPrefix + 'offsettop');
 
-			if ($this.attr('data-image') != null) {
+			if (Ulala._shouldBeWaitLoading($this)) {
 				if (!$this.attr(Ulala.domPrefix + 'loading') && (offset < offsets.loading)) {
 					$this.attr(Ulala.domPrefix + 'loading', true);
+					
 					Ulala._loadImage($this);
 				}
 			}
@@ -106,6 +112,7 @@
 			if ($this.attr('data-waypoint') != null) {
 				if (!$this.attr(Ulala.domPrefix + 'waypointing') && (offset < offsets.waypoint)) {
 					$this.attr(Ulala.domPrefix + 'waypointing', true);
+
 					Ulala._showImage($this);
 				}
 			}
@@ -115,12 +122,7 @@
 	Ulala._calcOffsets = function() {
 		Ulala.$elements.each(function() {
 			var $this = $(this);
-
 			$this.attr(Ulala.domPrefix + 'offsettop', $this.offset().top);
-
-			if ($this.attr(Ulala.domPrefix + 'loading') != true) {
-				$this.attr(Ulala.domPrefix + 'loaded', $this.data('image') ? false : true);
-			}
 		});
 	};
 
@@ -131,8 +133,9 @@
 		Ulala._calcOffsets();
 		Ulala._calc();
 
-		if (Ulala.onResize == null) {
-			Ulala.onResize = true;
+		if (Ulala._onResizeHandlerAttached == null) {
+			Ulala._onResizeHandlerAttached = true;
+
 			Ulala.$window.on('resize', function() {
 				clearTimeout(Ulala._resizeTimeout);
 				Ulala._resizeTimeout = setTimeout(function() {
@@ -142,8 +145,9 @@
 			});
 		}
 
-		if (Ulala.onScroll == null) {
-			Ulala.onScroll = true;
+		if (Ulala._onScrollHandlerAttached == null) {
+			Ulala._onScrollHandlerAttached = true;
+
 			Ulala.$document.on('scroll', function(e) {
 				requestAnimationFrame(Ulala._calc);
 			});
