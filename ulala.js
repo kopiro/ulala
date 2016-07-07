@@ -12,8 +12,17 @@
 
 		$document: $(document),
 		$window: $(window),
+		cssPrefix: (function() {
+			var styles = window.getComputedStyle(document.documentElement, ''),
+			pre = (Array.prototype.slice
+			.call(styles)
+			.join('')
+			.match(/-(moz|webkit|ms)-/) || (styles.OLink === '' && ['', 'o'])
+			)[1],
+			dom = ('WebKit|Moz|MS|O').match(new RegExp('(' + pre + ')', 'i'))[1];
+			return '-' + pre + '-';
+		})(),
 
-		_resizeTimeout: null,
 		domPrefix: 'data-ulala-',
 
 		$elements: null,
@@ -28,19 +37,15 @@
 			visibleClass: '-visible'
 		},
 
-		cssPrefix: (function() {
-			var styles = window.getComputedStyle(document.documentElement, ''),
-			pre = (Array.prototype.slice
-			.call(styles)
-			.join('')
-			.match(/-(moz|webkit|ms)-/) || (styles.OLink === '' && ['', 'o'])
-			)[1],
-			dom = ('WebKit|Moz|MS|O').match(new RegExp('(' + pre + ')', 'i'))[1];
-			return '-' + pre + '-';
-		})()
-
 	};
 
+	Ulala.attr = function($this, prop, newValue) {
+		if (newValue != null) {
+			return $this.attr(Ulala.domPrefix + '' + prop, newValue);
+		} else {
+			return $this.attr(Ulala.domPrefix + '' + prop);
+		}
+	};
 
 	Ulala.calcImageSuffix = function() {
 		if (window.innerWidth >= 768) {
@@ -64,10 +69,10 @@
 
 	Ulala.elementLoadImage = function($this) {
 		var onLoaded = function() {
-			$this.attr(Ulala.domPrefix + 'loaded', true);
+			Ulala.attr($this, 'loaded', true);
 			$this.addClass(Ulala.config.loadedClass);
 
-			if ($this.attr(Ulala.domPrefix + 'visible')) {
+			if (Ulala.attr($this, 'visible')) {
 				Ulala.elementShowImage($this);
 			}
 		};
@@ -100,27 +105,22 @@
 	};
 
 	Ulala.elementShowImage = function($this) {
-		$this.attr(Ulala.domPrefix + 'visible', true);
+		Ulala.attr($this, 'visible', true);
 
-		if ($this.attr(Ulala.domPrefix + 'loaded')) {
+		if (Ulala.attr($this, 'loaded')) {
 			$this.addClass(Ulala.config.visibleClass);
 		}
 	};
 
 	Ulala.elementParallax = function($this, cs, wh) {
 		var $wrapper = $this.parent();
-		var posTop = $this.attr(Ulala.domPrefix + 'otop') << 0;
+		var offset = Ulala.attr($this, 'otop') << 0;
 		var height = $wrapper.outerHeight() << 0;
-		var parallaxOffset = $this.attr(Ulala.domPrefix + 'pdelta');
 
-		var pv = cs + wh;
-		var translation = (pv - posTop) / (wh + height); 
-		var cssTranslation = -1 * Math.min(Math.max(translation,0),1) * parallaxOffset;
-	
-		$this.css(
-		Ulala.cssPrefix + 'transform', 
-		'translate3d(0, ' + cssTranslation + 'px, 0)'
-		);
+		var translation = cs / ( offset + height );
+		var cssTranslation = -1 * Math.min(Math.max(translation,0),1) * (Ulala.attr($this, 'pdelta') << 0);
+
+		$this.css(Ulala.cssPrefix + 'transform', 'translate3d(0, ' + cssTranslation + 'px, 0)');
 	};
 
 	Ulala.parse = function(e) {
@@ -134,24 +134,24 @@
 
 		Ulala.$elements.each(function() {
 			var $this = $(this);
-			var offset = $this.attr(Ulala.domPrefix + 'otop');
+			var offset = Ulala.attr($this, 'otop');
 
 			// Loading images
 
 			if (Ulala._shouldBeWaitLoading($this)) {
-				if (!$this.attr(Ulala.domPrefix + 'loading') && (offset < offsets.loading)) {
-					$this.attr(Ulala.domPrefix + 'loading', true);
+				if (!Ulala.attr($this, 'loading') && (offset < offsets.loading)) {
+					Ulala.attr($this, 'loading', true);
 					Ulala.elementLoadImage($this, cs, wh);
 				}
 			} else {
-				$this.attr(Ulala.domPrefix + 'loaded', true);
+				Ulala.attr($this, 'loaded', true);
 			}
 
 			// Waypoint
 
 			if ($this.attr('data-waypoint') != null) {
-				if (!$this.attr(Ulala.domPrefix + 'waypointing') && (offset < offsets.waypoint)) {
-					$this.attr(Ulala.domPrefix + 'waypointing', true);
+				if (!Ulala.attr($this, 'waypointing') && (offset < offsets.waypoint)) {
+					Ulala.attr($this, 'waypointing', true);
 
 					Ulala.elementShowImage($this, cs, wh);
 				}
@@ -167,7 +167,7 @@
 
 	Ulala.elementParseParallax = function($this) {
 		var $wrapper = $this.parent();
-		var r = 1 + Number($this.attr('data-parallax'));
+		var r = 1 + Number( $this.attr('data-parallax') || 0.25 );
 		var wrapperHeightWithPR = (r * $wrapper.outerHeight());
 
 		var onLoaded = function() {
@@ -177,26 +177,20 @@
 			if (RI > RW) {
 				$this.height( wrapperHeightWithPR );
 				$this.width( wrapperHeightWithPR * RI );
-				$this.css({
-					left: '-999px',
-					right: '-999px',
-					top: 0,
-					margin: '0 auto'
-				});
 			} else {
 				$this.width( $wrapper.outerWidth() );
 				$this.height( $wrapper.outerWidth() / RI );
-
-				var delta = ($wrapper.outerWidth() / RI) - $wrapper.outerHeight();
-				$this.attr(Ulala.domPrefix + 'pdelta', delta);
-
-				$this.css({
-					left: '-999px',
-					right: '-999px',
-					top: 0,
-					margin: '0 auto'
-				});
 			}
+
+			var delta = $this.height() - $wrapper.outerHeight();
+			Ulala.attr($this, 'pdelta', delta);
+
+			$this.css({
+				left: '-999px',
+				right: '-999px',
+				top: 0,
+				margin: '0 auto'
+			});
 		};
 
 		if ($this.prop('complete')) {
@@ -207,22 +201,23 @@
 	};
 
 	Ulala.preParse = function() {
+		Ulala.PARSING_TIME = Date.now();
+
 		Ulala.calcImageSuffix();
 
 		Ulala.$elements.each(function() {
 			var $this = $(this);
-			$this.attr(Ulala.domPrefix + 'otop', $this.offset().top);
+			Ulala.attr($this, 'otop', $this.offset().top);
 
 			if ($this.attr('data-parallax') != null) {
-				$this.attr(Ulala.domPrefix + 'otop', $this.parent().offset().top);
-				if ($this.attr(Ulala.domPrefix + 'data-parallax-parsed') == null) {
-					$this.attr(Ulala.domPrefix + 'data-parallax-parsed', true);
+				Ulala.attr($this, 'otop', $this.parent().offset().top);
+				if ((Ulala.attr($this, 'parallax-parsed')<<0) < Ulala.PARSING_TIME) {
+					Ulala.attr($this, 'parallax-parsed', Ulala.PARSING_TIME);
 					Ulala.elementParseParallax($this);
 				}
 			}
 		});
 	};
-
 
 	Ulala.run = function() {
 		Ulala.preParse();
@@ -231,25 +226,18 @@
 
 	Ulala.init = function(config) {
 		$.extend(Ulala.config, config || {});
+		Ulala.PARSING_TIME = Date.now();
 
 		var style = '';
 		style += '[data-parallax-wrapper] { overflow: hidden; position: relative; }';
-		style += '[data-parallax] { position: absolute; ' + Ulala.cssPrefix + 'transition: transform 0s;}';
+		style += '[data-parallax] { position: absolute; }';
 		$('head').append('<style>' + style + '</style>');
 
-		Ulala.$elements = $('[data-waypoint],[data-image],[data-parallax]');
+		Ulala.$elements = $('[data-waypoint], [data-image], [data-parallax]');
 
-		if (Ulala._onResizeHandlerAttached == null) {
-			Ulala._onResizeHandlerAttached = true;
-
-			Ulala.$window.on('resize', function() {
-				clearTimeout(Ulala._resizeTimeout);
-				Ulala._resizeTimeout = setTimeout(Ulala.run, 250);
-			});
-		}
-
-		if (Ulala._onScrollHandlerAttached == null) {
-			Ulala._onScrollHandlerAttached = true;
+		if (Ulala._handlerAttached == null) {
+			Ulala._handlerAttached = true;
+			Ulala.$window.on('resize', Ulala.run);
 			Ulala.$document.on('scroll', Ulala.run);
 		}
 
