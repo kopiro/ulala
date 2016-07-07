@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "uglifyjs ulala.js --compress --source-map -o ulala.min.js"
   },
   "repository": {
     "type": "git",
@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/caffeinalab/ulala/issues"
   },
-  "homepage": "https://github.com/caffeinalab/ulala#readme"
+  "homepage": "https://github.com/caffeinalab/ulala#readme",
+  "devDependencies": {
+    "uglify-js": "^2.7.0"
+  }
 }

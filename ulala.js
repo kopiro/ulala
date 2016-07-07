@@ -92,12 +92,10 @@
 			}
 
 			new Image(file).addEventListener('load', function() {
-				if ($this.prop('tagName') === 'DIV') {
-					$this.attr('style', 'background-image: url("' + file + '")');
-				} else if ($this.prop('tagName') === 'IMG') {
+				if ($this.prop('tagName') === 'IMG') {
 					$this.attr('src', file);
 				} else {
-					console.error('Ulala: unrecognized tag for lazy loading', $this.prop('tagName'));
+					$this.attr('style', 'background-image: url("' + file + '")');
 				}
 			}, false);
 		}
