@@ -29,7 +29,6 @@
 		suffix: '',
 
 		config: {
-			debug: 0,
 			preloadIn: 1,
 			visibilityIn: 0,
 			useSuffixes: true,

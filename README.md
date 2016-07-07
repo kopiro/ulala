@@ -1,4 +1,4 @@
-# Ulala
+## Ulala
 
 #### Show the *right* things when you *scroll*
 
@@ -25,6 +25,10 @@ Ratio of the window to trigger the visibility.
 #### `visibleClass`
 
 The class to add when visible.
+
+#### `loadedClass`
+
+The class to add when an image is loaded.
 
 #### `useSuffixes`
 
